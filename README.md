@@ -2,7 +2,7 @@ Node.js Forever Service Cookbook
 ================================
 
 This Chef cookbook sets up an Upstart or /etc/init.d service definition to run a
-Node.js script using the [Forever](0) service manager.
+Node.js script using the [Forever][0] service manager.
 
 Include the recipes from this cookbook in your runlist after the installation of
 Node.js:
@@ -40,7 +40,7 @@ Attributes
   * `forever-service['user']` = The user that the process will ultimately run under.
 
 Further, there are attributes to set values for some of the Forever process
-manager options. See the [Forever documentation](0)
+manager options. See the [Forever documentation][0]
 for information on these.
 
   * `forever-service['forever']['min-uptime']`
