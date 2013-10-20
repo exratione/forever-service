@@ -29,8 +29,9 @@ directory logdir do
   not_if { ::File.exists?(logdir) }
 end
 
-# Enable the service.
-service node['forever-service']['identifier'] do
-  supports [:restart, :status]
-  action :enable
+# Run one of the recipes depending on service type.
+begin
+  include_recipe "forever-service::#{node['forever-service']['service-type']}"
+rescue Chef::Exceptions::RecipeNotFound
+  Chef::Log.error "Allowed values for forever-service/service-type are: 'initd', 'upstart'"
 end
