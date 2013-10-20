@@ -11,7 +11,6 @@ Node.js:
 run_list [
   'recipe[nodejs]',
   'recipe[forever-service]'
-  'recipe[forever-service::start]'
 ]
 ```
 
