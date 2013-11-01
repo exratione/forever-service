@@ -36,6 +36,7 @@ Attributes
   * `forever-service['pid-file-path']` = Path to the service process pidfile.
   * `forever-service['service-type']` = "initd" or "upstart".
   * `forever-service['start-script']` = Path to the Node.js script to run under Forever.
+  * `forever-service['start-service']` = If set then launch the service. Otherwise, just create it.
   * `forever-service['user']` = The user that the process will ultimately run under.
 
 Further, there are attributes to set values for some of the Forever process
@@ -60,6 +61,7 @@ default_attributes(
     'pid-file-path' => '/var/run/angular-websocket-transport.pid',
     'service-type' => 'initd',
     'start-script' => '/home/node/project/src/server.js',
+    'start-service' => true,
     'user' => 'node',
     'forever' => {
       'min-uptime' => 5000,

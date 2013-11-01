@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.0.3
+-----
+
+  * Add option not to start.
+
 0.0.2
 -----
 

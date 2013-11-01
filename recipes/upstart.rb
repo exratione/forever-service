@@ -15,5 +15,7 @@ template "/etc/init/#{node['forever-service']['identifier']}.conf" do
   owner 'root'
   group 'root'
   mode 00644
-  notifies :run, resources(:execute => 'start-upstart-service')
+  if node['forever-service']['start-service']
+    notifies :run, resources(:execute => 'start-upstart-service')
+  end
 end

@@ -14,5 +14,7 @@ template "/etc/init.d/#{node['forever-service']['identifier']}" do
   group 'root'
   mode 00755
   notifies :enable, resources(:service => node['forever-service']['identifier'])
-  notifies :start, resources(:service => node['forever-service']['identifier'])
+  if node['forever-service']['start-service']
+    notifies :start, resources(:service => node['forever-service']['identifier'])
+  end
 end

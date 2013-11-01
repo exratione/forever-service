@@ -3,7 +3,7 @@ maintainer        'Reason'
 maintainer_email  'reason@exratione.com'
 license           'MIT'
 description       'Set up a service to run a designated Node.js script.'
-version           '0.0.1'
+version           '0.0.3'
 recipe            'forever-service', 'Set up a service to run a designated Node.js script.'
 recipe            'forever-service::upstart', 'Set up an upstart service definition.'
 recipe            'forever-service::initd', 'Set up an init.d service definition.'
@@ -59,6 +59,10 @@ attribute 'forever-service/start-script',
   :display_name => 'Service Start Script',
   :description => 'Absolute path to the Node.js script to launch the service process.',
   :required => 'required'
+
+attribute 'forever-service/start-service',
+  :display_name => 'Start the Service?',
+  :description => 'If set then launch the service, otherwise just create it.'
 
 # Note that the service launches as root regardless of what is specified as the
 # user here.
