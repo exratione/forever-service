@@ -42,22 +42,24 @@
 # NODE_BIN_DIR=/usr/local/node/bin
 # Set the NODE_PATH to the Node.js main node_modules directory.
 # NODE_PATH=/usr/local/lib/node_modules
-# The directory containing the application start Javascript file.
-# APPLICATION_DIRECTORY=/home/user/my-application
-# The application start Javascript filename.
-# APPLICATION_START=start-my-application.js
+# The application startup Javascript file path.
+# APPLICATION_PATH=/home/user/my-application/start-my-application.js
 # Process ID file path.
 # PIDFILE=/var/run/my-application.pid
 # Log file path.
 # LOGFILE=/var/log/my-application.log
-#
+# Forever settings to prevent the application spinning if it fails on launch.
+# MIN_UPTIME="5000"
+# SPIN_SLEEP_TIME="2000"
+
 NAME="<%= node['forever-service']['display-name'] %>"
 NODE_BIN_DIR=<%= node['forever-service']['node-bin'] %>
 NODE_PATH=<%= node['forever-service']['node-path'] %>
-APPLICATION_DIRECTORY=<%= File.dirname(node['forever-service']['start-script']) %>
-APPLICATION_START=<%= File.basename(node['forever-service']['start-script']) %>
+APPLICATION_PATH=<%= node['forever-service']['start-script'] %>
 PIDFILE=<%= node['forever-service']['pid-file-path'] %>
 LOGFILE=<%= node['forever-service']['log-file-path'] %>
+MIN_UPTIME="<%= node['forever-service']['forever']['min-uptime'] %>"
+SPIN_SLEEP_TIME="<%= node['forever-service']['forever']['spin-sleep-time'] %>"
 
 # Add node to the path for situations in which the environment is passed.
 PATH=$NODE_BIN_DIR:$PATH
@@ -83,19 +85,26 @@ start() {
     # The pidfile contains the child process pid, not the forever process pid.
     # We're only using it as a marker for whether or not the process is
     # running.
-    forever --pidFile $PIDFILE --sourceDir $APPLICATION_DIRECTORY \
-        -a -l $LOGFILE --minUptime 5000 --spinSleepTime 2000 \
-        start $APPLICATION_START &
+    #
+    # Note that redirecting the output to /dev/null (or anywhere) is necessary
+    # to make this script work in the initial provisioning run. No redirection
+    # makes Chef unhappy, and while the provisioning will complete without error
+    # the process will not be started.
+    forever \
+      --pidFile $PIDFILE \
+      -a \
+      -l $LOGFILE \
+      --minUptime $MIN_UPTIME \
+      --spinSleepTime $SPIN_SLEEP_TIME \
+      start $APPLICATION_PATH 2>&1 > /dev/null &
     RETVAL=$?
 }
 
 stop() {
     if [ -f $PIDFILE ]; then
         echo "Shutting down $NAME"
-        # Tell Forever to stop the process. Note that doing it this way means
-        # that each application that runs as a service must have a different
-        # start file name, regardless of which directory it is in.
-        forever stop $APPLICATION_START
+        # Tell Forever to stop the process.
+        forever stop $APPLICATION_PATH 2>&1 > /dev/null
         # Get rid of the pidfile, since Forever won't do that.
         rm -f $PIDFILE
         RETVAL=$?
@@ -106,22 +115,22 @@ stop() {
 }
 
 restart() {
-    echo "Restarting $NAME"
     stop
     start
 }
 
 status() {
-    echo "Status for $NAME:"
-    # This is taking the lazy way out on status, as it will return a list of
-    # all running Forever processes. You get to figure out what you want to
-    # know from that information.
-    #
-    # On Ubuntu, this isn't even necessary. To find out whether the service is
+    # On Ubuntu this isn't even necessary. To find out whether the service is
     # running, use "service my-application status" which bypasses this script
     # entirely provided you used the service utility to start the process.
-    forever list
-    RETVAL=$?
+    forever list | grep -q "$APPLICATION_PATH"
+    if [ "$?" -eq "0" ]; then
+        echo "$NAME is running."
+        RETVAL=0
+    else
+        echo "$NAME is not running."
+        RETVAL=3
+    fi
 }
 
 case "$1" in

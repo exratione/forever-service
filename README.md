@@ -1,11 +1,13 @@
-Node.js Forever Service Cookbook
-================================
+# Node.js Forever Service Cookbook
 
 This Chef cookbook sets up an Upstart or /etc/init.d service definition to run a
-Node.js script using the [Forever][0] service manager.
+Node.js script using the [Forever][0] service manager. Forever is configured to
+restart this Node.js process should it ever fail.
 
-Include the recipes from this cookbook in your runlist after the installation of
-Node.js:
+## Usage
+
+Include the default recipe from this cookbook in the Chef runlist after the
+installation of Node.js:
 
 ```
 run_list [
@@ -14,18 +16,26 @@ run_list [
 ]
 ```
 
-Upstart or Init.d
------------------
+## Dependencies
+
+The following cookbooks are listed as dependencies:
+
+  * nodejs
+  * logrotate
+
+Any cookbook that installs Node.js can be substituted for the `nodejs` cookbook,
+however, such as [n and Node.js][1] for example.
+
+## Upstart or Init.d
 
 Choose which service type to set up by setting the
-`forever-service['service-type']` attribute to either "upstart" or "initd".
+`forever-service['service-type']` attribute to either `upstart` or `initd`.
 
 The init.d script used here should work just fine in both RPM-based and
-Debian-based distributions. The Upstart script requires that you have Upstart
-installed in your system, as is the case if you are using Ubuntu.
+Debian-based distributions. The Upstart script requires Upstart to be installed
+on the system, as is the case if using Ubuntu.
 
-Attributes
-----------
+## Attributes
 
   * `forever-service['description']` = Description of the service.
   * `forever-service['display-name']` = Service display name.
@@ -39,26 +49,25 @@ Attributes
   * `forever-service['start-service']` = If set then launch the service. Otherwise, just create it.
   * `forever-service['user']` = The user that the process will ultimately run under.
 
-Further, there are attributes to set values for some of the Forever process
-manager options. See the [Forever documentation][0]
-for information on these.
+Further, there are attributes to set values for some of the Forever options
+relating to restarting a failed process. See the [Forever documentation][0] for
+information on these.
 
   * `forever-service['forever']['min-uptime']`
   * `forever-service['forever']['spin-sleep-time']`
 
-Attributes Example
-------------------
+## Attributes Example
 
 ```
 default_attributes(
   'forever-service' => {
     'description' => 'A Node.js server.',
-    'display-name' => 'Node.js Server ',
+    'display-name' => 'Node.js Server',
     'identifier' => 'nodejs-server',
     'log-file-path' => '/var/log/node/server.log',
     'node-bin' => '/usr/local/bin',
     'node-path' => '/usr/local/lib/node_modules',
-    'pid-file-path' => '/var/run/angular-websocket-transport.pid',
+    'pid-file-path' => '/var/run/node-server.pid',
     'service-type' => 'initd',
     'start-script' => '/home/node/project/src/server.js',
     'start-service' => true,
@@ -71,8 +80,7 @@ default_attributes(
 )
 ```
 
-Service User and Permissions
-----------------------------
+## Service User and Permissions
 
 The service launches the process as root. It is expected that the Node.js script
 will downgrade permissions to another user and group appropriately after binding
@@ -85,6 +93,8 @@ process.setuid('node');
 ```
 
 This cookbook only needs to know the user (and create it if it doesn't already
-exist) in order to correctly set up the log file and directory.
+exist) in order to correctly set up ownership and permissions for the log file
+and directory.
 
 [0]: https://github.com/nodejitsu/forever
+[1]: https://github.com/exratione/n-and-nodejs-cookbook

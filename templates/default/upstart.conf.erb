@@ -19,9 +19,8 @@ expect fork
 # The following environment variables must be set so as to define where Node.js
 # and Forever binaries and the Node.js source code can be found.
 #
-# The example environment variables below assume that Node.js is installed into
-# /home/node/local/node by building from source as outlined Where:
-# https://www.exratione.com/2011/07/running-a-nodejs-server-as-a-service-using-forever/
+# The example environment variables below assume that Node.js is installed by
+# building from source with the standard settings.
 #
 # It should be easy enough to adapt to the paths to be appropriate to a package
 # installation, but note that the packages available in the default repositories
@@ -32,21 +31,23 @@ expect fork
 # env NODE_BIN_DIR="/usr/local/bin"
 # Set the NODE_PATH to the Node.js main node_modules directory.
 # env NODE_PATH="/usr/local/lib/node_modules"
-# The directory containing the application Javascript file.
-# env APPLICATION_DIRECTORY="/home/node/my-application"
-# The application start Javascript filename.
-# env APPLICATION_START="start-my-application.js"
+# The application startup Javascript file path.
+# env APPLICATION_PATH="/home/node/my-application/start-my-application.js"
 # Process ID file path.
 # PIDFILE=/var/run/my-application.pid
 # Log file path.
 # env LOG="/var/log/my-application.log"
+# Forever settings to prevent the application spinning if it fails on launch.
+# env MIN_UPTIME="5000"
+# env SPIN_SLEEP_TIME="2000"
 
 env NODE_BIN_DIR="<%= node['forever-service']['node-bin'] %>"
 env NODE_PATH="<%= node['forever-service']['node-path'] %>"
-env APPLICATION_DIRECTORY="<%= File.dirname(node['forever-service']['start-script']) %>"
-env APPLICATION_START="<%= File.basename(node['forever-service']['start-script']) %>"
+env APPLICATION_PATH="<%= node['forever-service']['start-script'] %>"
 env PIDFILE="<%= node['forever-service']['pid-file-path'] %>"
 env LOG="<%= node['forever-service']['log-file-path'] %>"
+env MIN_UPTIME="<%= node['forever-service']['forever']['min-uptime'] %>"
+env SPIN_SLEEP_TIME="<%= node['forever-service']['forever']['spin-sleep-time'] %>"
 
 script
     # Add the node executables to the path, which includes Forever if it is
@@ -58,8 +59,13 @@ script
     # someone makes an error in application initialization code, or bringing
     # down production servers the same way if a database or other critical
     # service suddenly becomes inaccessible.
-    exec forever --pidFile $PIDFILE --sourceDir $APPLICATION_DIRECTORY -a \
-         -l $LOG --minUptime 5000 --spinSleepTime 2000 start $APPLICATION_START
+    exec forever \
+      --pidFile $PIDFILE \
+      -a \
+      -l $LOG \
+      --minUptime $MIN_UPTIME \
+      --spinSleepTime $SPIN_SLEEP_TIME \
+      start $APPLICATION_PATH
 end script
 
 pre-stop script
@@ -70,5 +76,5 @@ pre-stop script
     # its data. Note that doing it this way means that each application that
     # runs under Forever must have a different start file name, regardless of
     # which directory it is in.
-    exec forever stop $APPLICATION_START
+    exec forever stop $APPLICATION_PATH
 end script

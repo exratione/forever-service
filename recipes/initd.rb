@@ -3,8 +3,9 @@
 #
 
 # Enable the service.
-service node['forever-service']['identifier'] do
-  supports [:restart, :status]
+service 'forever-service' do
+  service_name node['forever-service']['identifier']
+  supports [:start, :stop, :restart, :status]
   action :nothing
 end
 
@@ -13,8 +14,8 @@ template "/etc/init.d/#{node['forever-service']['identifier']}" do
   owner 'root'
   group 'root'
   mode 00755
-  notifies :enable, resources(:service => node['forever-service']['identifier'])
+  notifies :enable, 'service[forever-service]'
   if node['forever-service']['start-service']
-    notifies :start, resources(:service => node['forever-service']['identifier'])
+    notifies :start, 'service[forever-service]'
   end
 end
