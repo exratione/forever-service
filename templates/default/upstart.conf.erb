@@ -7,7 +7,7 @@
 # Script based on:
 # https://www.exratione.com/2013/02/nodejs-and-forever-as-a-service-simple-upstart-and-init-scripts-for-ubuntu/
 #
-description "<%= node['forever-service']['description'] %>"
+description "<%= @description %>"
 
 start on startup
 stop on shutdown
@@ -34,20 +34,20 @@ expect fork
 # The application startup Javascript file path.
 # env APPLICATION_PATH="/home/node/my-application/start-my-application.js"
 # Process ID file path.
-# PIDFILE=/var/run/my-application.pid
+# env PIDFILE="/var/run/my-application.pid"
 # Log file path.
 # env LOG="/var/log/my-application.log"
 # Forever settings to prevent the application spinning if it fails on launch.
 # env MIN_UPTIME="5000"
 # env SPIN_SLEEP_TIME="2000"
 
-env NODE_BIN_DIR="<%= node['forever-service']['node-bin'] %>"
-env NODE_PATH="<%= node['forever-service']['node-path'] %>"
-env APPLICATION_PATH="<%= node['forever-service']['start-script'] %>"
-env PIDFILE="<%= node['forever-service']['pid-file-path'] %>"
-env LOG="<%= node['forever-service']['log-file-path'] %>"
-env MIN_UPTIME="<%= node['forever-service']['forever']['min-uptime'] %>"
-env SPIN_SLEEP_TIME="<%= node['forever-service']['forever']['spin-sleep-time'] %>"
+env NODE_BIN_DIR="<%= node['forever-service']['node']['bin'] %>"
+env NODE_PATH="<%= node['forever-service']['node']['path'] %>"
+env APPLICATION_PATH="<%= @start_script_symlink ? @start_script_symlink : @start_script %>"
+env PIDFILE="<%= @pid_file_path %>"
+env LOG="<%= @log.path %>"
+env MIN_UPTIME="<%= @forever.min_uptime %>"
+env SPIN_SLEEP_TIME="<%= @forever.spin_sleep_time %>"
 
 script
     # Add the node executables to the path, which includes Forever if it is

@@ -9,20 +9,20 @@
 # built-in service functions are used. So information is provided for both.
 #
 ### BEGIN INIT INFO
-# Provides:             <%= node['forever-service']['identifier'] %>
+# Provides:             <%= @identifier %>
 # Required-Start:       $syslog $remote_fs
 # Required-Stop:        $syslog $remote_fs
 # Should-Start:         $local_fs
 # Should-Stop:          $local_fs
 # Default-Start:        2 3 4 5
 # Default-Stop:         0 1 6
-# Short-Description:    <%= node['forever-service']['display-name'] %>
-# Description:          <%= node['forever-service']['description'] %>
+# Short-Description:    <%= @display_name %>
+# Description:          <%= @description %>
 ### END INIT INFO
 #
 ### BEGIN CHKCONFIG INFO
 # chkconfig: 2345 55 25
-# description: <%= node['forever-service']['description'] %>
+# description: <%= @description %>
 ### END CHKCONFIG INFO
 #
 # Based on:
@@ -39,27 +39,27 @@
 # An application name to display in echo text.
 # NAME="My Application"
 # The full path to the directory containing the node and forever binaries.
-# NODE_BIN_DIR=/usr/local/node/bin
+# NODE_BIN_DIR="/usr/local/node/bin"
 # Set the NODE_PATH to the Node.js main node_modules directory.
-# NODE_PATH=/usr/local/lib/node_modules
+# NODE_PATH="/usr/local/lib/node_modules"
 # The application startup Javascript file path.
-# APPLICATION_PATH=/home/user/my-application/start-my-application.js
+# APPLICATION_PATH="/home/user/my-application/start-my-application.js"
 # Process ID file path.
-# PIDFILE=/var/run/my-application.pid
+# PIDFILE="/var/run/my-application.pid"
 # Log file path.
-# LOGFILE=/var/log/my-application.log
+# LOGFILE="/var/log/my-application.log"
 # Forever settings to prevent the application spinning if it fails on launch.
 # MIN_UPTIME="5000"
 # SPIN_SLEEP_TIME="2000"
 
-NAME="<%= node['forever-service']['display-name'] %>"
-NODE_BIN_DIR=<%= node['forever-service']['node-bin'] %>
-NODE_PATH=<%= node['forever-service']['node-path'] %>
-APPLICATION_PATH=<%= node['forever-service']['start-script'] %>
-PIDFILE=<%= node['forever-service']['pid-file-path'] %>
-LOGFILE=<%= node['forever-service']['log-file-path'] %>
-MIN_UPTIME="<%= node['forever-service']['forever']['min-uptime'] %>"
-SPIN_SLEEP_TIME="<%= node['forever-service']['forever']['spin-sleep-time'] %>"
+NAME="<%= @display_name %>"
+NODE_BIN_DIR="<%= node['forever-service']['node']['bin'] %>"
+NODE_PATH="<%= node['forever-service']['node']['path'] %>"
+APPLICATION_PATH="<%= @start_script_symlink ? @start_script_symlink : @start_script %>"
+PIDFILE="<%= @pid_file_path %>"
+LOGFILE="<%= @log.path %>"
+MIN_UPTIME="<%= @forever.min_uptime %>"
+SPIN_SLEEP_TIME="<%= @forever.spin_sleep_time %>"
 
 # Add node to the path for situations in which the environment is passed.
 PATH=$NODE_BIN_DIR:$PATH
@@ -123,7 +123,16 @@ status() {
     # On Ubuntu this isn't even necessary. To find out whether the service is
     # running, use "service my-application status" which bypasses this script
     # entirely provided you used the service utility to start the process.
-    forever list | grep -q "$APPLICATION_PATH"
+    #
+    # The commented line below is the obvious way of checking whether or not a
+    # process is currently running via Forever, but in recent Forever versions
+    # when the service is started during Chef provisioning a dead pipe is left
+    # behind somewhere and that causes an EPIPE exception to be thrown.
+    # forever list | grep -q "$APPLICATION_PATH"
+    #
+    # So instead we add an extra layer of indirection with this to bypass that
+    # issue.
+    echo `forever list` | grep -q "$APPLICATION_PATH"
     if [ "$?" -eq "0" ]; then
         echo "$NAME is running."
         RETVAL=0
